@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -9,6 +10,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Transform spawnZone;
     [SerializeField] private GameObject hold;
     [SerializeField] private float spawnInterval;
+    [SerializeField] private float despawnTime;
     [SerializeField] private float spawnWidthDampener;
     [SerializeField] private float spawnHeightDampener;
     [SerializeField] private int initialSpawnCount;
@@ -21,54 +23,48 @@ public class GameManager : MonoBehaviour
     {
         _currentSpawnTime = spawnInterval;
         _spawnedHolds = new List<Hold>();
-        for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone.localScale);
+        for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone);
     }
 
     private void Update()
     {
         if (_currentSpawnTime <= 0)
         {
-            SpawnHold(spawnZone.localScale);
+            SpawnHold(spawnZone);
             _currentSpawnTime = spawnInterval;
         }
 
         _currentSpawnTime -= Time.deltaTime;
     }
 
-    private void SpawnHold(Vector3 zone)
+    private void SpawnHold(Transform zone)
     {
-        Vector3 hold_position =new Vector3(
-            Random.Range(-zone.x / 2 + spawnWidthDampener, zone.x / 2 - spawnWidthDampener),
-            Random.Range(-zone.y / 4 + spawnHeightDampener, zone.y / 4 - spawnHeightDampener),
-            0.25f
-        );
+        Vector3 hold_position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener);
 
-        while (_spawnedHolds.Any(spawned_hold => 
-            PositionsOverlap(Vec3ToVec2Int(spawned_hold.gameObject.transform.localPosition), Vec3ToVec2Int(hold_position), _vicinityUnits))
-        )
+        while (_spawnedHolds.Any(spawned_hold => Utils.PositionsOverlap(
+                   Utils.Vec3ToVec2Int(spawned_hold.gameObject.transform.localPosition), 
+                   Utils.Vec3ToVec2Int(hold_position), _vicinityUnits
+        )))
         {
-            hold_position =new Vector3(
-                Random.Range(-zone.x / 2 + spawnWidthDampener, zone.x / 2 - spawnWidthDampener),
-                Random.Range(-zone.y / 4 + spawnHeightDampener, zone.y / 4 - spawnHeightDampener),
-                0.25f
-            );
+            hold_position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener);
         }
 
         Hold hold_copy = Instantiate(hold, hold_position, hold.transform.rotation).GetComponent<Hold>();
         hold_copy.name += _spawnedHolds.Count;
         _spawnedHolds.Add(hold_copy);
+
+        // hold_copy.GetComponent<MeshRenderer>().material.SetColor("color", Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)]);
+        hold_copy.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
+        
+        StartCoroutine(DestroyHold(hold_copy, despawnTime));
     }
 
-    private bool PositionsOverlap(Vector2Int p1, Vector2Int p2, float vicinity)
+    private IEnumerator DestroyHold(Hold hold, float time)
     {
-        return p1.x - vicinity <= p2.x && p2.x <= p1.x + vicinity &&
-               p1.y - vicinity <= p2.y && p2.y <= p1.y + vicinity;
-    }
+        yield return new WaitForSeconds(time);
 
-    private Vector2Int Vec3ToVec2Int(Vector3 v)
-    {
-        Vector3Int v_int = Vector3Int.FloorToInt(v);
-        return new Vector2Int(v_int.x, v_int.y);
+        _spawnedHolds.Remove(hold);
+        Destroy(hold.gameObject);
     }
 
     private void OnDrawGizmos()
