@@ -7,6 +7,11 @@ public class Utils
     {
         return new Color(r / 255.0f, g / 255.0f, b / 255.0f);
     }
+
+    public static int GetLayerMaskFromLayerIndex(int index)
+    {
+        return 1 << index;
+    }
     
     public static List<Color> boulderColors = new List<Color>
     {
