@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     private FullBodyBipedIK _ikController;
     private Dictionary<KeyCode, Hold> _holdsInArea;
     private Dictionary<Transform, FullBodyBipedEffector> _limbs;
+    private Dictionary<Transform, Hold> _usedHolds = new Dictionary<Transform, Hold>();
 
     private List<KeyCode> _availableKeys = new List<KeyCode>
     {
@@ -49,7 +50,7 @@ public class PlayerController : MonoBehaviour
             if (Input.GetKeyDown(key))
             {
                 SwitchToHold(_holdsInArea[key]);
-                // _holdsInArea = GetHoldsInArea(detectionRadius);
+                _holdsInArea = GetHoldsInArea(detectionRadius);
             }
         }
     }
@@ -76,7 +77,21 @@ public class PlayerController : MonoBehaviour
     private void SwitchToHold(Hold hold)
     {
         InteractionObject interaction_object = hold.GetInteractionObject();
-        Transform closestLimb = GetClosestLimb(hold.transform, _limbs.Keys.ToList());
+        List<Transform> unavailable_limbs = _usedHolds
+            .GroupBy(item => item.Value)
+            .Where(item => item.Count() > 1)
+            .SelectMany(item => item)
+            .Select(item => item.Key)
+            .ToList();
+        List<Transform> available_limbs = _limbs.Keys.ToList()/*.Except(hold.GetAttachedLimbs()).ToList()*/;
+        Transform closestLimb = GetClosestLimb(hold.transform, available_limbs);
+
+        if (!closestLimb) return;
+        // if (_usedHolds.ContainsKey(closestLimb) && _usedHolds[closestLimb] == hold) return;
+        //
+        // _usedHolds.Remove(closestLimb);
+        
+        _usedHolds.Add(closestLimb, hold);
         _interactionSystem.StartInteraction(_limbs[closestLimb], interaction_object, true);
     }
 
