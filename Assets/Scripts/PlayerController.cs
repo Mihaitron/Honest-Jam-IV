@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RootMotion.FinalIK;
@@ -8,12 +9,18 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float detectionRadius;
     [SerializeField] private Vector3 detectionOffset;
+    [SerializeField] private float maxStamina = 100;
+    [SerializeField] private float maxChalk = 100;
+    [SerializeField] private float staminaDecreaseSpeed = 2;
 
     private InteractionObject _lhInteractionObject;
     private InteractionSystem _interactionSystem;
     private FullBodyBipedIK _ikController;
     private Dictionary<KeyCode, Hold> _holdsInArea = new ();
     private Dictionary<Transform, FullBodyBipedEffector> _limbs = new ();
+    private float _stamina;
+    private float _chalk;
+    private int _points;
 
     private List<KeyCode> _availableKeys = new ()
     {
@@ -27,12 +34,13 @@ public class PlayerController : MonoBehaviour
         KeyCode.K,
         KeyCode.L,
     };
-
+    
     private void Start()
     {
+        _stamina = maxStamina;
+        _chalk = maxChalk;
         _interactionSystem = GetComponent<InteractionSystem>();
         _ikController = GetComponent<FullBodyBipedIK>();
-        _holdsInArea = GetHoldsInArea(detectionRadius);
         _limbs = new Dictionary<Transform, FullBodyBipedEffector>
         {
             { _ikController.references.leftHand, FullBodyBipedEffector.LeftHand },
@@ -40,9 +48,11 @@ public class PlayerController : MonoBehaviour
             { _ikController.references.leftFoot, FullBodyBipedEffector.LeftFoot },
             { _ikController.references.rightFoot, FullBodyBipedEffector.RightFoot },
         };
+        
+        _holdsInArea = GetHoldsInArea(detectionRadius);
 
-        _interactionSystem.OnInteractionStop += (effector, interaction_object) => _holdsInArea = GetHoldsInArea(detectionRadius);
         _interactionSystem.OnInteractionStop += (effector, interaction_object) => transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position);
+        _interactionSystem.OnInteractionStop += (effector, interaction_object) => _holdsInArea = GetHoldsInArea(detectionRadius);
     }
 
     private void Update()
@@ -54,6 +64,8 @@ public class PlayerController : MonoBehaviour
                 SwitchToHold(_holdsInArea[key]);
             }
         }
+        
+        UseStamina();
     }
 
     private Dictionary<KeyCode, Hold> GetHoldsInArea(float radius)
@@ -61,6 +73,11 @@ public class PlayerController : MonoBehaviour
         Collider[] colliders = Physics.OverlapSphere(transform.position + detectionOffset, radius, Utils.GetLayerMaskFromLayerIndex(31));
         Dictionary<KeyCode, Hold> holds = new Dictionary<KeyCode, Hold>();
         List<KeyCode> available_keys = new List<KeyCode>(_availableKeys);
+
+        foreach (Hold hold in FindObjectsOfType<Hold>())
+        {
+            hold.UnsetKey();
+        }
 
         foreach (Collider collider in colliders)
         {
@@ -87,6 +104,9 @@ public class PlayerController : MonoBehaviour
         hold.AttachLimb(closest_limb);
         
         _interactionSystem.StartInteraction(_limbs[closest_limb], interaction_object, true);
+        
+        UseChalk(hold.GetChalkConsumption());
+        AwardPoints(hold.GetPointsAwarded());
     }
 
     private Transform GetClosestLimb(Transform obj, List<Transform> limbs)
@@ -113,6 +133,32 @@ public class PlayerController : MonoBehaviour
         Vector3 new_position = left_foot_position + right_foot_position;
 
         return new_position / 2;
+    }
+
+    private void UseStamina()
+    {
+        float stamina_consumption = staminaDecreaseSpeed * Time.deltaTime;
+        if (_chalk <= 0) stamina_consumption *= 2;
+
+        _stamina -= stamina_consumption;
+        if (_stamina < 0) _stamina = 0;
+        
+        UIManager.instance.SetStamina(_stamina, maxStamina);
+    }
+
+    private void UseChalk(float chalk_consumption)
+    {
+        _chalk -= chalk_consumption;
+        if (_chalk < 0) _chalk = 0;
+        
+        UIManager.instance.SetChalk(_chalk, maxChalk);
+    }
+
+    private void AwardPoints(int points_awarded)
+    {
+        _points += points_awarded;
+
+        UIManager.instance.SetPoints(_points);
     }
     
     private void OnDrawGizmos()

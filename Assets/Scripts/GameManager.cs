@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour
@@ -17,13 +19,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float _vicinityUnits;
 
     private float _currentSpawnTime;
-    private List<Hold> _spawnedHolds;
+    private List<Hold> _spawnedHolds = new ();
+
+    private void Awake()
+    {
+        for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone);
+    }
 
     private void Start()
     {
         _currentSpawnTime = spawnInterval;
-        _spawnedHolds = new List<Hold>();
-        for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone);
     }
 
     private void Update()
@@ -52,8 +57,7 @@ public class GameManager : MonoBehaviour
         Hold hold_copy = Instantiate(hold, hold_position, hold.transform.rotation).GetComponent<Hold>();
         hold_copy.name += _spawnedHolds.Count;
         _spawnedHolds.Add(hold_copy);
-
-        // hold_copy.GetComponent<MeshRenderer>().material.SetColor("color", Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)]);
+        
         hold_copy.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
         
         StartCoroutine(DestroyHold(hold_copy, despawnTime));

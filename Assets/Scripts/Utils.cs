@@ -48,4 +48,9 @@ public class Utils
             0.25f
         );
     }
+
+    public static float Remap(float value, float old_from, float old_to, float new_from, float new_to)
+    {
+        return (value - old_from) / (old_to - old_from) * (new_to - new_from) + new_from;
+    }
 }
