@@ -13,7 +13,7 @@ public class Utils
         return 1 << index;
     }
     
-    public static List<Color> boulderColors = new List<Color>
+    public static List<Color> boulderColors = new ()
     {
         Color.black,
         Color.white,
@@ -45,7 +45,12 @@ public class Utils
                 zone_scale.x / 2 - width_dampner + zone_position.x),
             Random.Range(-zone_scale.y / 4 + height_dampner + zone_position.y,
                 zone_scale.y / 4 - height_dampner + zone_position.y),
-            0.25f
+            0.02f
         );
+    }
+
+    public static float Remap(float value, float old_from, float old_to, float new_from, float new_to)
+    {
+        return (value - old_from) / (old_to - old_from) * (new_to - new_from) + new_from;
     }
 }

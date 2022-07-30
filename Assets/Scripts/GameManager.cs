@@ -15,15 +15,31 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float spawnHeightDampener;
     [SerializeField] private int initialSpawnCount;
     [SerializeField] private float _vicinityUnits;
+    
+    [SerializeField] private Hold lhInitialHold;
+    [SerializeField] private Hold rhInitialHold;
+    [SerializeField] private Hold lfInitialHold;
+    [SerializeField] private Hold rfInitialHold;
 
     private float _currentSpawnTime;
-    private List<Hold> _spawnedHolds;
+    private List<Hold> _spawnedHolds = new ();
+    
+    public static GameManager instance { get; private set; }
 
     private void Start()
     {
-        _currentSpawnTime = spawnInterval;
-        _spawnedHolds = new List<Hold>();
+        if (!instance)
+        {
+            instance = this;
+        }
+
+        if (lhInitialHold != null) SpawnDefaultHold(lhInitialHold);
+        if (rhInitialHold != null) SpawnDefaultHold(rhInitialHold);
+        if (lfInitialHold != null) SpawnDefaultHold(lfInitialHold);
+        if (rfInitialHold != null) SpawnDefaultHold(rfInitialHold);
+        
         for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone);
+        _currentSpawnTime = spawnInterval;
     }
 
     private void Update()
@@ -35,6 +51,12 @@ public class GameManager : MonoBehaviour
         }
 
         _currentSpawnTime -= Time.deltaTime;
+    }
+
+    private void SpawnDefaultHold(Hold hold)
+    {
+        hold.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
+        _spawnedHolds.Add(hold);
     }
 
     private void SpawnHold(Transform zone)
@@ -52,8 +74,7 @@ public class GameManager : MonoBehaviour
         Hold hold_copy = Instantiate(hold, hold_position, hold.transform.rotation).GetComponent<Hold>();
         hold_copy.name += _spawnedHolds.Count;
         _spawnedHolds.Add(hold_copy);
-
-        // hold_copy.GetComponent<MeshRenderer>().material.SetColor("color", Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)]);
+        
         hold_copy.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
         
         StartCoroutine(DestroyHold(hold_copy, despawnTime));
