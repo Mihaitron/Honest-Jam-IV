@@ -1,4 +1,4 @@
-using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using RootMotion.FinalIK;
@@ -12,15 +12,26 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float maxStamina = 100;
     [SerializeField] private float maxChalk = 100;
     [SerializeField] private float staminaDecreaseSpeed = 2;
-
-    private InteractionObject _lhInteractionObject;
-    private InteractionSystem _interactionSystem;
+    
+    [SerializeField] private Hold lhInitialHold;
+    [SerializeField] private Hold rhInitialHold;
+    [SerializeField] private Hold lfInitialHold;
+    [SerializeField] private Hold rfInitialHold;
+    
     private FullBodyBipedIK _ikController;
+    private CustomInteractionSystem _interactionSystem;
     private Dictionary<KeyCode, Hold> _holdsInArea = new ();
     private Dictionary<Transform, FullBodyBipedEffector> _limbs = new ();
     private float _stamina;
     private float _chalk;
     private int _points;
+    private bool _initialPositionSet = false;
+
+    private Dictionary<FullBodyBipedEffector, Transform> _legsPositions = new()
+    {
+        { FullBodyBipedEffector.LeftFoot, null },
+        { FullBodyBipedEffector.RightFoot, null },
+    };
 
     private List<KeyCode> _availableKeys = new ()
     {
@@ -39,8 +50,8 @@ public class PlayerController : MonoBehaviour
     {
         _stamina = maxStamina;
         _chalk = maxChalk;
-        _interactionSystem = GetComponent<InteractionSystem>();
         _ikController = GetComponent<FullBodyBipedIK>();
+        _interactionSystem = GetComponent<CustomInteractionSystem>();
         _limbs = new Dictionary<Transform, FullBodyBipedEffector>
         {
             { _ikController.references.leftHand, FullBodyBipedEffector.LeftHand },
@@ -51,12 +62,22 @@ public class PlayerController : MonoBehaviour
         
         _holdsInArea = GetHoldsInArea(detectionRadius);
 
-        _interactionSystem.OnInteractionStop += (effector, interaction_object) => transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position);
-        _interactionSystem.OnInteractionStop += (effector, interaction_object) => _holdsInArea = GetHoldsInArea(detectionRadius);
+        // _interactionSystem.onInteractionComplete.AddListener(() => transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position));
+        _interactionSystem.onInteractionComplete.AddListener(() => _holdsInArea = GetHoldsInArea(detectionRadius));
     }
 
     private void Update()
     {
+        if (!_initialPositionSet)
+        {
+            if (lhInitialHold) SwitchToHold(lhInitialHold, true);
+            if (rhInitialHold) SwitchToHold(rhInitialHold, true);
+            if (lfInitialHold) SwitchToHold(lfInitialHold, true);
+            if (rfInitialHold) SwitchToHold(rfInitialHold, true);
+
+            _initialPositionSet = true;
+        }
+        
         foreach (KeyCode key in _holdsInArea.Keys)
         {
             if (Input.GetKeyDown(key))
@@ -64,8 +85,9 @@ public class PlayerController : MonoBehaviour
                 SwitchToHold(_holdsInArea[key]);
             }
         }
-        
+
         UseStamina();
+        transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position);
     }
 
     private Dictionary<KeyCode, Hold> GetHoldsInArea(float radius)
@@ -92,9 +114,8 @@ public class PlayerController : MonoBehaviour
         return holds;
     }
 
-    private void SwitchToHold(Hold hold)
+    private void SwitchToHold(Hold hold, bool initial = false)
     {
-        InteractionObject interaction_object = hold.GetInteractionObject();
         List<Transform> available_limbs = _limbs.Keys.ToList().Except(hold.GetAttachedLimbs()).ToList();
         Transform closest_limb = GetClosestLimb(hold.transform, available_limbs);
 
@@ -103,10 +124,13 @@ public class PlayerController : MonoBehaviour
         foreach (Hold close_hold in _holdsInArea.Values) close_hold.DetachLimb(closest_limb);
         hold.AttachLimb(closest_limb);
         
-        _interactionSystem.StartInteraction(_limbs[closest_limb], interaction_object, true);
+        _interactionSystem.StartTransition(hold.transform.GetChild(0), _limbs[closest_limb]);
         
-        UseChalk(hold.GetChalkConsumption());
-        AwardPoints(hold.GetPointsAwarded());
+        if (!initial)
+        {
+            UseChalk(hold.GetChalkConsumption());
+            AwardPoints(hold.GetPointsAwarded());
+        }
     }
 
     private Transform GetClosestLimb(Transform obj, List<Transform> limbs)
@@ -166,10 +190,7 @@ public class PlayerController : MonoBehaviour
         Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(transform.position + detectionOffset, detectionRadius);
         
-        if (_limbs.Count > 0)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawSphere(RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position), .1f);
-        }
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position), .5f);
     }
 }

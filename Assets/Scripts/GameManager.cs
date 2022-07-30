@@ -1,9 +1,7 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Events;
 using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour
@@ -20,14 +18,17 @@ public class GameManager : MonoBehaviour
 
     private float _currentSpawnTime;
     private List<Hold> _spawnedHolds = new ();
-
-    private void Awake()
-    {
-        for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone);
-    }
+    
+    public static GameManager instance { get; private set; }
 
     private void Start()
     {
+        if (!instance)
+        {
+            instance = this;
+        }
+        
+        for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone);
         _currentSpawnTime = spawnInterval;
     }
 
