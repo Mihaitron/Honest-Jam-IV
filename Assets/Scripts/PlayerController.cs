@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using RootMotion.FinalIK;
@@ -25,13 +24,7 @@ public class PlayerController : MonoBehaviour
     private float _stamina;
     private float _chalk;
     private int _points;
-    private bool _initialPositionSet = false;
-
-    private Dictionary<FullBodyBipedEffector, Transform> _legsPositions = new()
-    {
-        { FullBodyBipedEffector.LeftFoot, null },
-        { FullBodyBipedEffector.RightFoot, null },
-    };
+    private bool _initialPositionSet;
 
     private List<KeyCode> _availableKeys = new ()
     {
@@ -61,8 +54,6 @@ public class PlayerController : MonoBehaviour
         };
         
         _holdsInArea = GetHoldsInArea(detectionRadius);
-
-        // _interactionSystem.onInteractionComplete.AddListener(() => transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position));
         _interactionSystem.onInteractionComplete.AddListener(() => _holdsInArea = GetHoldsInArea(detectionRadius));
     }
 
@@ -189,8 +180,11 @@ public class PlayerController : MonoBehaviour
     {
         Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(transform.position + detectionOffset, detectionRadius);
-        
-        Gizmos.color = Color.green;
-        Gizmos.DrawSphere(RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position), .5f);
+
+        if (_ikController != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawSphere(RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position), .5f);
+        }
     }
 }

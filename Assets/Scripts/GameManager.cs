@@ -15,6 +15,11 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float spawnHeightDampener;
     [SerializeField] private int initialSpawnCount;
     [SerializeField] private float _vicinityUnits;
+    
+    [SerializeField] private Hold lhInitialHold;
+    [SerializeField] private Hold rhInitialHold;
+    [SerializeField] private Hold lfInitialHold;
+    [SerializeField] private Hold rfInitialHold;
 
     private float _currentSpawnTime;
     private List<Hold> _spawnedHolds = new ();
@@ -27,6 +32,11 @@ public class GameManager : MonoBehaviour
         {
             instance = this;
         }
+
+        if (lhInitialHold != null) SpawnDefaultHold(lhInitialHold);
+        if (rhInitialHold != null) SpawnDefaultHold(rhInitialHold);
+        if (lfInitialHold != null) SpawnDefaultHold(lfInitialHold);
+        if (rfInitialHold != null) SpawnDefaultHold(rfInitialHold);
         
         for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone);
         _currentSpawnTime = spawnInterval;
@@ -41,6 +51,12 @@ public class GameManager : MonoBehaviour
         }
 
         _currentSpawnTime -= Time.deltaTime;
+    }
+
+    private void SpawnDefaultHold(Hold hold)
+    {
+        hold.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
+        _spawnedHolds.Add(hold);
     }
 
     private void SpawnHold(Transform zone)

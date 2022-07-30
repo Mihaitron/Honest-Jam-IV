@@ -175,22 +175,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1033853644, guid: 41e7eac0cd19b554ba75f18d7dac47d7, type: 3}
-      propertyPath: solver.effectors.Array.data[5].positionWeight
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1033853644, guid: 41e7eac0cd19b554ba75f18d7dac47d7, type: 3}
-      propertyPath: solver.effectors.Array.data[6].positionWeight
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1033853644, guid: 41e7eac0cd19b554ba75f18d7dac47d7, type: 3}
-      propertyPath: solver.effectors.Array.data[7].positionWeight
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1033853644, guid: 41e7eac0cd19b554ba75f18d7dac47d7, type: 3}
-      propertyPath: solver.effectors.Array.data[8].positionWeight
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1033853648, guid: 41e7eac0cd19b554ba75f18d7dac47d7, type: 3}
       propertyPath: lfInitialHold
       value: 
@@ -266,11 +250,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6593600997995966649, guid: 41e7eac0cd19b554ba75f18d7dac47d7,
-        type: 3}
-      propertyPath: interactionSpeed
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 41e7eac0cd19b554ba75f18d7dac47d7, type: 3}
@@ -516,7 +495,7 @@ MonoBehaviour:
   m_RendererIndex: -1
   m_VolumeLayerMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 2147483703
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 1
@@ -1712,6 +1691,10 @@ MonoBehaviour:
   spawnHeightDampener: 1.1
   initialSpawnCount: 20
   _vicinityUnits: 1
+  lhInitialHold: {fileID: 1292641638}
+  rhInitialHold: {fileID: 222008638}
+  lfInitialHold: {fileID: 158329419}
+  rfInitialHold: {fileID: 90675130}
 --- !u!1 &1761334758
 GameObject:
   m_ObjectHideFlags: 0
