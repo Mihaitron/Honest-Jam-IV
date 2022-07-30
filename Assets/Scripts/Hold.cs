@@ -66,4 +66,14 @@ public class Hold : MonoBehaviour
     {
         return pointsAwarded;
     }
+
+    public void SetSpeed(float new_speed)
+    {
+        speed = new_speed;
+    }
+    
+    public void Accelerate(float acceleration)
+    {
+        speed += acceleration;
+    }
 }

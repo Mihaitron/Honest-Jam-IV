@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,24 +16,31 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float spawnHeightDampener;
     [SerializeField] private int initialSpawnCount;
     [SerializeField] private float _vicinityUnits;
+    [SerializeField] private float _initialHoldsSpeed;
+    [SerializeField] private float _holdsSpeedAcceleration;
     
     [SerializeField] private Hold lhInitialHold;
     [SerializeField] private Hold rhInitialHold;
     [SerializeField] private Hold lfInitialHold;
     [SerializeField] private Hold rfInitialHold;
 
+    public float failureHeight;
+
     private float _currentSpawnTime;
     private List<Hold> _spawnedHolds = new ();
     
     public static GameManager instance { get; private set; }
 
-    private void Start()
+    private void Awake()
     {
         if (!instance)
         {
             instance = this;
         }
+    }
 
+    private void Start()
+    {
         if (lhInitialHold != null) SpawnDefaultHold(lhInitialHold);
         if (rhInitialHold != null) SpawnDefaultHold(rhInitialHold);
         if (lfInitialHold != null) SpawnDefaultHold(lfInitialHold);
@@ -51,11 +59,14 @@ public class GameManager : MonoBehaviour
         }
 
         _currentSpawnTime -= Time.deltaTime;
+
+        AccelerateHolds(_holdsSpeedAcceleration);
     }
 
     private void SpawnDefaultHold(Hold hold)
     {
         hold.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
+        hold.SetSpeed(_initialHoldsSpeed);
         _spawnedHolds.Add(hold);
     }
 
@@ -73,6 +84,7 @@ public class GameManager : MonoBehaviour
 
         Hold hold_copy = Instantiate(hold, hold_position, hold.transform.rotation).GetComponent<Hold>();
         hold_copy.name += _spawnedHolds.Count;
+        hold_copy.SetSpeed(_initialHoldsSpeed);
         _spawnedHolds.Add(hold_copy);
         
         hold_copy.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
@@ -88,6 +100,17 @@ public class GameManager : MonoBehaviour
         Destroy(hold.gameObject);
     }
 
+    private void AccelerateHolds(float acceleration)
+    {
+        foreach (Hold hold in _spawnedHolds)
+        {
+            hold.Accelerate(acceleration);
+        }
+
+        _initialHoldsSpeed += acceleration;
+        despawnTime -= acceleration * 10;
+    }
+    
     private void OnDrawGizmos()
     {
         if (initialSpawnZone)
@@ -107,5 +130,8 @@ public class GameManager : MonoBehaviour
             Gizmos.color = Color.green;
             Gizmos.DrawWireCube(spawnZone.position, scale);
         }
+
+        Gizmos.color = Color.black;
+        Gizmos.DrawLine(new Vector3(-100f, failureHeight, -.5f), new Vector3(100f, failureHeight, -.5f));
     }
 }

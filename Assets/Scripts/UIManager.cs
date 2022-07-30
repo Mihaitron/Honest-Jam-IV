@@ -1,20 +1,29 @@
+using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
     [SerializeField] private RectTransform chalkSlider;
     [SerializeField] private RectTransform staminaSlider;
     [SerializeField] private TMP_Text score;
+    [SerializeField] private TMP_Text highscore;
+    [SerializeField] private GameObject failScreen;
 
     public static UIManager instance { get; private set; }
 
-    private void Start()
+    private void Awake()
     {
         if (!instance)
         {
             instance = this;
         }
+    }
+
+    private void Start()
+    {
+        failScreen.SetActive(false);
     }
 
     public void SetChalk(float chalk, float max)
@@ -29,8 +38,25 @@ public class UIManager : MonoBehaviour
         staminaSlider.localScale = new Vector3(new_width, 1, 0);
     }
 
-    public void SetPoints(int points)
+    public void SetScore(int points)
     {
         score.text = points.ToString("D7");
+    }
+
+    public void SetHighschore(int points)
+    {
+        highscore.text = "(" + points.ToString("D7") + ")";
+    }
+
+
+    public void OpenFailScreen(int points)
+    {
+        failScreen.transform.GetChild(1).GetComponent<TMP_Text>().text = points.ToString("D7");
+        failScreen.SetActive(true);
+    }
+
+    public void TryAgain()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }

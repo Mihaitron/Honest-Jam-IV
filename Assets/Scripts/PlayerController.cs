@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
     private float _stamina;
     private float _chalk;
     private int _points;
+    private int _highestPoints;
     private bool _initialPositionSet;
 
     private List<KeyCode> _availableKeys = new ()
@@ -41,6 +42,7 @@ public class PlayerController : MonoBehaviour
     
     private void Start()
     {
+        _highestPoints = PlayerPrefs.GetInt("points");
         _stamina = maxStamina;
         _chalk = maxChalk;
         _ikController = GetComponent<FullBodyBipedIK>();
@@ -55,6 +57,8 @@ public class PlayerController : MonoBehaviour
         
         _holdsInArea = GetHoldsInArea(detectionRadius);
         _interactionSystem.onInteractionComplete.AddListener(() => _holdsInArea = GetHoldsInArea(detectionRadius));
+        
+        UIManager.instance.SetHighschore(_highestPoints);
     }
 
     private void Update()
@@ -79,6 +83,7 @@ public class PlayerController : MonoBehaviour
 
         UseStamina();
         transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position);
+        CheckFailure();
     }
 
     private Dictionary<KeyCode, Hold> GetHoldsInArea(float radius)
@@ -173,7 +178,20 @@ public class PlayerController : MonoBehaviour
     {
         _points += points_awarded;
 
-        UIManager.instance.SetPoints(_points);
+        UIManager.instance.SetScore(_points);
+        if (_points > _highestPoints) UIManager.instance.SetHighschore(_points);
+    }
+
+    private void CheckFailure()
+    {
+        if (transform.position.y >= GameManager.instance.failureHeight)
+            return;
+            
+        if (_points > _highestPoints) PlayerPrefs.SetInt("points", _points);
+
+        UIManager.instance.OpenFailScreen(_points);
+        GameManager.instance.enabled = false;
+        enabled = false;
     }
     
     private void OnDrawGizmos()
