@@ -49,8 +49,7 @@ public class UIManager : MonoBehaviour
     {
         highscore.text = "(" + points.ToString("D7") + ")";
     }
-
-
+    
     public void OpenFailScreen(int points)
     {
         failScreen.transform.GetChild(1).GetComponent<TMP_Text>().text = points.ToString("D7");
@@ -65,5 +64,10 @@ public class UIManager : MonoBehaviour
     public void TryAgain()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void GoToMainMenu()
+    {
+        SceneManager.LoadScene("Menu");
     }
 }
