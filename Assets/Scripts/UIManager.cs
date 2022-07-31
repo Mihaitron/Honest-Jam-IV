@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -26,6 +25,7 @@ public class UIManager : MonoBehaviour
     {
         failScreen.SetActive(false);
         loadingScreen.SetActive(true);
+        loadingScreen.GetComponent<Animator>().speed = 0;
     }
 
     public void SetChalk(float chalk, float max)
@@ -59,7 +59,7 @@ public class UIManager : MonoBehaviour
 
     public void CloseLoadingScreen()
     {
-        loadingScreen.SetActive(false);
+        loadingScreen.GetComponent<Animator>().speed = 1;
     }
 
     public void TryAgain()
