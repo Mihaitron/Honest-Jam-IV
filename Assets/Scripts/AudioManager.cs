@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +8,8 @@ using Random = System.Random;
 public class AudioManager : MonoBehaviour
 {
     [SerializeField] private List<AudioClip> songs;
+    [SerializeField] private AudioClip uiSound;
+    [SerializeField] private AudioSource uiSource;
 
     public static AudioManager instance { get; private set; }
 
@@ -55,5 +56,11 @@ public class AudioManager : MonoBehaviour
 
             yield return new WaitForSeconds(song.length);
         }
+    }
+
+    public void PlayUISound()
+    {
+        uiSource.clip = uiSound;
+        uiSource.Play();
     }
 }
