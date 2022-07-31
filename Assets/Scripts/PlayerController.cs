@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviour
     
     private FullBodyBipedIK _ikController;
     private CustomInteractionSystem _interactionSystem;
+    private Rigidbody _rigidbody;
     private Dictionary<KeyCode, Hold> _holdsInArea = new ();
     private Dictionary<Transform, FullBodyBipedEffector> _limbs = new ();
     private float _stamina;
@@ -26,6 +27,7 @@ public class PlayerController : MonoBehaviour
     private int _points;
     private int _highestPoints;
     private bool _initialPositionSet;
+    private bool _loaded;
 
     private List<KeyCode> _availableKeys = new ()
     {
@@ -42,11 +44,13 @@ public class PlayerController : MonoBehaviour
     
     private void Start()
     {
+        _loaded = false;
         _highestPoints = PlayerPrefs.GetInt("points");
         _stamina = maxStamina;
         _chalk = maxChalk;
         _ikController = GetComponent<FullBodyBipedIK>();
         _interactionSystem = GetComponent<CustomInteractionSystem>();
+        _rigidbody = GetComponent<Rigidbody>();
         _limbs = new Dictionary<Transform, FullBodyBipedEffector>
         {
             { _ikController.references.leftHand, FullBodyBipedEffector.LeftHand },
@@ -56,7 +60,10 @@ public class PlayerController : MonoBehaviour
         };
         
         _holdsInArea = GetHoldsInArea(detectionRadius);
+        _ikController.enabled = true;
+        _rigidbody.isKinematic = true;
         _interactionSystem.onInteractionComplete.AddListener(() => UIManager.instance.CloseLoadingScreen());
+        _interactionSystem.onInteractionComplete.AddListener(() => _loaded = true);
         _interactionSystem.onInteractionComplete.AddListener(() => _holdsInArea = GetHoldsInArea(detectionRadius));
         
         UIManager.instance.SetHighschore(_highestPoints);
@@ -76,15 +83,18 @@ public class PlayerController : MonoBehaviour
         
         foreach (KeyCode key in _holdsInArea.Keys)
         {
-            if (Input.GetKeyDown(key))
+            if (Input.GetKeyDown(key) && _loaded)
             {
                 SwitchToHold(_holdsInArea[key]);
             }
         }
 
-        UseStamina();
         transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position);
-        CheckFailure();
+        if (_loaded)
+        {
+            UseStamina();
+            CheckFailure();
+        }
     }
 
     private Dictionary<KeyCode, Hold> GetHoldsInArea(float radius)
@@ -165,6 +175,18 @@ public class PlayerController : MonoBehaviour
         if (_stamina < 0) _stamina = 0;
         
         UIManager.instance.SetStamina(_stamina, maxStamina);
+
+        if (_stamina <= 0) Fall();
+    }
+
+    private void Fall()
+    {
+        foreach (FullBodyBipedEffector limb in _limbs.Values)
+        {
+            _interactionSystem.Detach(limb);
+        }
+        _ikController.enabled = false;
+        _rigidbody.isKinematic = false;
     }
 
     private void UseChalk(float chalk_consumption)

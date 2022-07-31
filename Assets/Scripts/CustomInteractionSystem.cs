@@ -42,6 +42,32 @@ public class CustomInteractionSystem : MonoBehaviour
         if (effector != null) StartCoroutine(TransitionToTarget(effector, target));
     }
 
+    public void Detach(FullBodyBipedEffector type)
+    {
+        IKEffector effector;
+        
+        switch (type)
+        {
+            case FullBodyBipedEffector.LeftHand:
+                effector = _ikController.solver.leftHandEffector;
+                break;
+            case FullBodyBipedEffector.RightHand:
+                effector = _ikController.solver.rightHandEffector;
+                break;
+            case FullBodyBipedEffector.LeftFoot:
+                effector = _ikController.solver.leftFootEffector;
+                break;
+            case FullBodyBipedEffector.RightFoot:
+                effector = _ikController.solver.rightFootEffector;
+                break;
+            default:
+                effector = null;
+                break;
+        }
+
+        if (effector != null) StartCoroutine(DetachEffector(effector));
+    }
+    
     private IEnumerator TransitionToTarget(IKEffector effector, Transform target)
     {
         if (!effector.target)
@@ -65,5 +91,11 @@ public class CustomInteractionSystem : MonoBehaviour
         effector.positionWeight = 1f;
         
         onInteractionComplete.Invoke();
+    }
+
+    private IEnumerator DetachEffector(IKEffector effector)
+    {
+        effector.target = null;
+        yield return new WaitForEndOfFrame();
     }
 }
