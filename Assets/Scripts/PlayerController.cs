@@ -63,6 +63,7 @@ public class PlayerController : MonoBehaviour
         _ikController.enabled = true;
         _rigidbody.isKinematic = true;
         _interactionSystem.onInteractionComplete.AddListener(() => UIManager.instance.CloseLoadingScreen());
+        _interactionSystem.onInteractionComplete.AddListener(() => AudioManager.instance.PlaySongsRandomly());
         _interactionSystem.onInteractionComplete.AddListener(() => _loaded = true);
         _interactionSystem.onInteractionComplete.AddListener(() => _holdsInArea = GetHoldsInArea(detectionRadius));
         
