@@ -53,7 +53,7 @@ public class GameManager : MonoBehaviour
     {
         if (_currentSpawnTime <= 0)
         {
-            SpawnHold(spawnZone);
+            if (spawnZone) SpawnHold(spawnZone);
             _currentSpawnTime = spawnInterval;
         }
 
@@ -88,7 +88,7 @@ public class GameManager : MonoBehaviour
         
         hold_copy.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
         
-        StartCoroutine(DestroyHold(hold_copy, despawnTime));
+        if (despawnTime > 0) StartCoroutine(DestroyHold(hold_copy, despawnTime));
     }
 
     private IEnumerator DestroyHold(Hold hold, float time)
