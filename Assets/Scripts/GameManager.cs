@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +9,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Transform initialSpawnZone;
     [SerializeField] private Transform spawnZone;
     [SerializeField] private GameObject hold;
+    [SerializeField] private GameObject chalk;
     [SerializeField] private float spawnInterval;
     [SerializeField] private float despawnTime;
     [SerializeField] private float spawnWidthDampener;
@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
 
     private float _currentSpawnTime;
     private List<Hold> _spawnedHolds = new ();
+    private GameObject _spawnedChalk;
     
     public static GameManager instance { get; private set; }
 
@@ -48,6 +49,8 @@ public class GameManager : MonoBehaviour
         
         for (int i = 0; i < initialSpawnCount; i++) SpawnHold(initialSpawnZone);
         _currentSpawnTime = spawnInterval;
+        
+        SpawnChalk(initialSpawnZone);
     }
 
     private void Update()
@@ -59,10 +62,19 @@ public class GameManager : MonoBehaviour
         }
 
         _currentSpawnTime -= Time.deltaTime;
+        
+        if (_spawnedChalk == null) SpawnChalk(spawnZone);
     }
 
     private void FixedUpdate()
     {
+        if (_spawnedChalk)
+        {
+            Vector3 new_position = _spawnedChalk.transform.localPosition;
+            new_position.y -= Time.fixedDeltaTime * _initialHoldsSpeed;
+            _spawnedChalk.transform.localPosition = new_position;
+        }
+        
         AccelerateHolds(_holdsSpeedAcceleration);
     }
 
@@ -75,7 +87,7 @@ public class GameManager : MonoBehaviour
 
     private void SpawnHold(Transform zone)
     {
-        Vector3 hold_position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener);
+        Vector3 hold_position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener, 0.02f);
 
         int iterations = 0;
         while (_spawnedHolds.Any(spawned_hold => Utils.PositionsOverlap(
@@ -85,7 +97,7 @@ public class GameManager : MonoBehaviour
         {
             if (iterations >= 20)
                 return;
-            hold_position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener);
+            hold_position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener, 0.02f);
             iterations++;
         }
 
@@ -97,6 +109,25 @@ public class GameManager : MonoBehaviour
         hold_copy.GetComponent<Renderer>().material.color = Utils.boulderColors[Random.Range(0, Utils.boulderColors.Count)];
         
         if (despawnTime > 0) StartCoroutine(DestroyHold(hold_copy, despawnTime));
+    }
+
+    private void SpawnChalk(Transform zone)
+    {
+        Vector3 position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener, -0.66f);
+        
+        int iterations = 0;
+        while (_spawnedHolds.Any(spawned_hold => Utils.PositionsOverlap(
+                   Utils.Vec3ToVec2Int(spawned_hold.gameObject.transform.localPosition), 
+                   Utils.Vec3ToVec2Int(position), _vicinityUnits
+               )))
+        {
+            if (iterations >= 20)
+                return;
+            position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener, -0.66f);
+            iterations++;
+        }
+        
+        _spawnedChalk = Instantiate(chalk, position, hold.transform.rotation);
     }
 
     private IEnumerator DestroyHold(Hold hold, float time)

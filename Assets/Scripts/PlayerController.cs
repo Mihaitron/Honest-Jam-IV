@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float maxChalk = 100;
     [SerializeField] private float staminaDecreaseSpeed = 2;
     [SerializeField] private float staminaDepletionMultiplier = 10;
+    [SerializeField] private float chalkPerPiece = 50;
     
     [SerializeField] private Hold lhInitialHold;
     [SerializeField] private Hold rhInitialHold;
@@ -231,7 +232,17 @@ public class PlayerController : MonoBehaviour
         GameManager.instance.enabled = false;
         enabled = false;
     }
-    
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag != "chalk") return;
+
+        _chalk += chalkPerPiece;
+        if (_chalk > maxChalk) _chalk = maxChalk;
+        
+        Destroy(other.gameObject);
+    }
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;

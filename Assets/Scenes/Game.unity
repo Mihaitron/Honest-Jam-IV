@@ -2886,6 +2886,7 @@ MonoBehaviour:
   initialSpawnZone: {fileID: 1761334759}
   spawnZone: {fileID: 1038714114}
   hold: {fileID: 2014575430442531937, guid: bc54ba8063583bb40a8c817e10146b37, type: 3}
+  chalk: {fileID: 4626380458945127119, guid: 5e7ab08b39a971f4a80c6ab08d549f11, type: 3}
   spawnInterval: 1
   despawnTime: 80
   spawnWidthDampener: 2.7

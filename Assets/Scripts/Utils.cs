@@ -35,7 +35,7 @@ public class Utils
         return new Vector2Int(v_int.x, v_int.y);
     }
 
-    public static Vector3 GetRandomPositionInZone(Transform zone, float width_dampner, float height_dampner)
+    public static Vector3 GetRandomPositionInZone(Transform zone, float width_dampner, float height_dampner, float z_position)
     {
         Vector3 zone_scale = zone.localScale;
         Vector3 zone_position = zone.localPosition;
@@ -45,7 +45,7 @@ public class Utils
                 zone_scale.x / 2 - width_dampner + zone_position.x),
             Random.Range(-zone_scale.y / 4 + height_dampner + zone_position.y,
                 zone_scale.y / 4 - height_dampner + zone_position.y),
-            0.02f
+            z_position
         );
     }
 
