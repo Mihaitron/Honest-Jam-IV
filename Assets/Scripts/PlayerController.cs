@@ -56,6 +56,7 @@ public class PlayerController : MonoBehaviour
         };
         
         _holdsInArea = GetHoldsInArea(detectionRadius);
+        _interactionSystem.onInteractionComplete.AddListener(() => UIManager.instance.CloseLoadingScreen());
         _interactionSystem.onInteractionComplete.AddListener(() => _holdsInArea = GetHoldsInArea(detectionRadius));
         
         UIManager.instance.SetHighschore(_highestPoints);

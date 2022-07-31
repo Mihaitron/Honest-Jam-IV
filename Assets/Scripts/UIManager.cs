@@ -10,6 +10,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text score;
     [SerializeField] private TMP_Text highscore;
     [SerializeField] private GameObject failScreen;
+    [SerializeField] private GameObject loadingScreen;
 
     public static UIManager instance { get; private set; }
 
@@ -24,6 +25,7 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         failScreen.SetActive(false);
+        loadingScreen.SetActive(true);
     }
 
     public void SetChalk(float chalk, float max)
@@ -53,6 +55,11 @@ public class UIManager : MonoBehaviour
     {
         failScreen.transform.GetChild(1).GetComponent<TMP_Text>().text = points.ToString("D7");
         failScreen.SetActive(true);
+    }
+
+    public void CloseLoadingScreen()
+    {
+        loadingScreen.SetActive(false);
     }
 
     public void TryAgain()
