@@ -65,7 +65,7 @@ public class CustomInteractionSystem : MonoBehaviour
                 break;
         }
 
-        if (effector != null) StartCoroutine(DetachEffector(effector));
+        if (effector != null) effector.target = null;
     }
     
     private IEnumerator TransitionToTarget(IKEffector effector, Transform target)
@@ -91,11 +91,5 @@ public class CustomInteractionSystem : MonoBehaviour
         effector.positionWeight = 1f;
         
         onInteractionComplete.Invoke();
-    }
-
-    private IEnumerator DetachEffector(IKEffector effector)
-    {
-        effector.target = null;
-        yield return new WaitForEndOfFrame();
     }
 }
