@@ -18,6 +18,8 @@ public class MainMenuManager : MonoBehaviour
     private void Start()
     {
         playerAnimator.Play(playerAnimations[Random.Range(0, playerAnimations.Count)]);
+        AudioManager.instance.StopPlayingAll();
+        AudioManager.instance.PlaySongsRandomly();
     }
 
     public void StartGame(int sceneNumber)

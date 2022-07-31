@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float maxStamina = 100;
     [SerializeField] private float maxChalk = 100;
     [SerializeField] private float staminaDecreaseSpeed = 2;
+    [SerializeField] private float staminaDepletionMultiplier = 10;
     
     [SerializeField] private Hold lhInitialHold;
     [SerializeField] private Hold rhInitialHold;
@@ -28,23 +29,25 @@ public class PlayerController : MonoBehaviour
     private int _highestPoints;
     private bool _initialPositionSet;
     private bool _loaded;
+    private bool _switchingToHold;
 
     private List<KeyCode> _availableKeys = new ()
     {
-        KeyCode.A,
-        KeyCode.S,
-        KeyCode.D,
-        KeyCode.F,
-        KeyCode.G,
-        KeyCode.H,
-        KeyCode.J,
-        KeyCode.K,
-        KeyCode.L,
+        KeyCode.A, KeyCode.Q, KeyCode.Z,
+        KeyCode.S, KeyCode.W, KeyCode.X,
+        KeyCode.D, KeyCode.E, KeyCode.C,
+        KeyCode.F, KeyCode.R, KeyCode.V,
+        
+        KeyCode.G, KeyCode.T, KeyCode.B,
+        KeyCode.H, KeyCode.Y, KeyCode.N,
+        KeyCode.J, KeyCode.U, KeyCode.M,
+        KeyCode.K, KeyCode.I, KeyCode.L,
     };
     
     private void Start()
     {
         _loaded = false;
+        _switchingToHold = false;
         _highestPoints = PlayerPrefs.GetInt("points");
         _stamina = maxStamina;
         _chalk = maxChalk;
@@ -65,7 +68,8 @@ public class PlayerController : MonoBehaviour
         _interactionSystem.onInteractionComplete.AddListener(() => UIManager.instance.CloseLoadingScreen());
         _interactionSystem.onInteractionComplete.AddListener(() => AudioManager.instance.PlaySongsRandomly());
         _interactionSystem.onInteractionComplete.AddListener(() => _loaded = true);
-        _interactionSystem.onInteractionComplete.AddListener(() => _holdsInArea = GetHoldsInArea(detectionRadius));
+        _interactionSystem.onInteractionComplete.AddListener(() => _switchingToHold = false);
+        _interactionSystem.onInteractionBegin.AddListener(() => _holdsInArea = GetHoldsInArea(detectionRadius));
         
         UIManager.instance.SetHighschore(_highestPoints);
     }
@@ -84,13 +88,14 @@ public class PlayerController : MonoBehaviour
         
         foreach (KeyCode key in _holdsInArea.Keys)
         {
-            if (Input.GetKeyDown(key) && _loaded)
+            if (Input.GetKeyDown(key) && _loaded && !_switchingToHold)
             {
+                _switchingToHold = true;
                 SwitchToHold(_holdsInArea[key]);
             }
         }
 
-        transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position);
+        transform.position = RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position, _ikController.references.leftHand.position, _ikController.references.rightHand.position);
         if (_loaded)
         {
             UseStamina();
@@ -131,6 +136,12 @@ public class PlayerController : MonoBehaviour
 
         foreach (Hold close_hold in _holdsInArea.Values) close_hold.DetachLimb(closest_limb);
         hold.AttachLimb(closest_limb);
+
+        if (_stamina <= 3 * maxStamina / 5)
+        {
+            float distance = Vector3.Distance(closest_limb.position, hold.transform.position);
+            _stamina -= distance * staminaDepletionMultiplier;
+        }
         
         _interactionSystem.StartTransition(hold.transform.GetChild(0), _limbs[closest_limb]);
         
@@ -160,16 +171,19 @@ public class PlayerController : MonoBehaviour
         return closest_limb;
     }
 
-    private Vector3 RecalculateBodyPosition(Vector3 left_foot_position, Vector3 right_foot_position)
+    private Vector3 RecalculateBodyPosition(Vector3 left_foot_position, Vector3 right_foot_position, Vector3 left_hand_position, Vector3 right_hand_position)
     {
-        Vector3 new_position = left_foot_position + right_foot_position;
+        Vector3 new_position = left_foot_position + right_foot_position + left_hand_position + right_hand_position;
+        new_position /= 4f;
+        new_position -= detectionOffset;
 
-        return new_position / 2;
+        return new_position;
     }
 
     private void UseStamina()
     {
         float stamina_consumption = staminaDecreaseSpeed * Time.deltaTime;
+        if (_stamina <= maxStamina / 2f && _chalk > 0) stamina_consumption *= -0.5f;
         if (_chalk <= 0) stamina_consumption *= 2;
 
         _stamina -= stamina_consumption;
@@ -226,7 +240,7 @@ public class PlayerController : MonoBehaviour
         if (_ikController != null)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawSphere(RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position), .5f);
+            Gizmos.DrawSphere(RecalculateBodyPosition(_ikController.references.leftFoot.position, _ikController.references.rightFoot.position, _ikController.references.leftHand.position, _ikController.references.rightHand.position), .5f);
         }
     }
 }

@@ -9,6 +9,7 @@ public class CustomInteractionSystem : MonoBehaviour
     
     private FullBodyBipedIK _ikController;
     
+    [HideInInspector] public UnityEvent onInteractionBegin;
     [HideInInspector] public UnityEvent onInteractionComplete;
 
     private void Start()
@@ -70,6 +71,8 @@ public class CustomInteractionSystem : MonoBehaviour
     
     private IEnumerator TransitionToTarget(IKEffector effector, Transform target)
     {
+        onInteractionBegin.Invoke();
+        
         if (!effector.target)
         {
             while (effector.positionWeight > 0f)

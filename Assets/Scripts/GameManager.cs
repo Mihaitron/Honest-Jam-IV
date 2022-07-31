@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,7 +59,10 @@ public class GameManager : MonoBehaviour
         }
 
         _currentSpawnTime -= Time.deltaTime;
+    }
 
+    private void FixedUpdate()
+    {
         AccelerateHolds(_holdsSpeedAcceleration);
     }
 
@@ -73,12 +77,16 @@ public class GameManager : MonoBehaviour
     {
         Vector3 hold_position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener);
 
+        int iterations = 0;
         while (_spawnedHolds.Any(spawned_hold => Utils.PositionsOverlap(
                    Utils.Vec3ToVec2Int(spawned_hold.gameObject.transform.localPosition), 
                    Utils.Vec3ToVec2Int(hold_position), _vicinityUnits
         )))
         {
+            if (iterations >= 20)
+                return;
             hold_position = Utils.GetRandomPositionInZone(zone, spawnWidthDampener, spawnHeightDampener);
+            iterations++;
         }
 
         Hold hold_copy = Instantiate(hold, hold_position, hold.transform.rotation).GetComponent<Hold>();

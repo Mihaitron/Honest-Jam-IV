@@ -27,6 +27,11 @@ public class AudioManager : MonoBehaviour
         _source = GetComponent<AudioSource>();
     }
 
+    public void StopPlayingAll()
+    {
+        _source.Stop();
+    }
+
     public void PlaySongsRandomly()
     {
         if (_source.isPlaying) return;
